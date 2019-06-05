@@ -3,7 +3,8 @@ package resource
 import (
 	"strings"
 
-	yaml "gopkg.in/yaml.v2"
+	jsonyaml "github.com/ghodss/yaml"
+	"gopkg.in/yaml.v2"
 
 	"github.com/weaveworks/flux"
 	fluxerr "github.com/weaveworks/flux/errors"
@@ -172,7 +173,7 @@ func unmarshalKind(base baseObject, bytes []byte) (KubeManifest, error) {
 		return &list, nil
 	case base.Kind == "FluxHelmRelease" || base.Kind == "HelmRelease":
 		var fhr = FluxHelmRelease{baseObject: base}
-		if err := yaml.Unmarshal(bytes, &fhr); err != nil {
+		if err := jsonyaml.Unmarshal(bytes, &fhr); err != nil {
 			return nil, err
 		}
 		return &fhr, nil

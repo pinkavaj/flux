@@ -349,11 +349,9 @@ spec:
 
 func TestFindMappedContainerImages(t *testing.T) {
 
-	type container struct {
+	expected := []struct {
 		name, image, tag string
-	}
-
-	expected := []container{
+	}{
 		{"top", "repo/imageOne", "tagOne"},
 		{"sub", "repo/imageTwo", "tagTwo"},
 	}
@@ -381,7 +379,7 @@ spec:
     # Sub level image
     ` + expected[1].name + `:
       customRepository: ` + expected[1].image + `
-      customTag: `  + expected[1].tag + `
+      customTag: ` + expected[1].tag + `
 `
 
 	resources, err := ParseMultidoc([]byte(doc), "test")

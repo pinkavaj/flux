@@ -21,11 +21,10 @@ const (
 	//     image: some/image:version
 	//
 	// The name refers to the source of the image value.
-	ReleaseContainerName = "chart-image"
+	ReleaseContainerName  = "chart-image"
 	ImageRepositoryPrefix = "repository.flux.weave.works/"
-	ImageTagPrefix = "tag.flux.weave.works/"
+	ImageTagPrefix        = "tag.flux.weave.works/"
 )
-
 
 // MappedContainerImage holds the yaml dot notation paths to a
 // container image.
@@ -262,7 +261,7 @@ func (fhr FluxHelmRelease) Containers() []resource.Container {
 	var containers []resource.Container
 	containerSetter := func(container string, image image.Ref, _ ImageSetter) error {
 		containers = append(containers, resource.Container{
-			Name: container,
+			Name:  container,
 			Image: image,
 		})
 		return nil
