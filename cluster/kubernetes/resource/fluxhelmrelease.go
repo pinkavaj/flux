@@ -2,23 +2,37 @@ package resource
 
 import (
 	"fmt"
+	"k8s.io/helm/pkg/chartutil"
 	"sort"
+	"strings"
 
 	"github.com/weaveworks/flux/image"
 	"github.com/weaveworks/flux/resource"
 )
 
-// ReleaseContainerName is the name used when Flux interprets a
-// FluxHelmRelease as having a container with an image, by virtue of
-// having a `values` stanza with an image field:
-//
-// spec:
-//   ...
-//   values:
-//     image: some/image:version
-//
-// The name refers to the source of the image value.
-const ReleaseContainerName = "chart-image"
+const (
+	// ReleaseContainerName is the name used when Flux interprets a
+	// FluxHelmRelease as having a container with an image, by virtue of
+	// having a `values` stanza with an image field:
+	//
+	// spec:
+	//   ...
+	//   values:
+	//     image: some/image:version
+	//
+	// The name refers to the source of the image value.
+	ReleaseContainerName = "chart-image"
+	ImageRepositoryPrefix = "repository.flux.weave.works/"
+	ImageTagPrefix = "tag.flux.weave.works/"
+)
+
+
+// MappedContainerImage holds the yaml dot notation paths to a
+// container image.
+type MappedContainerImage struct {
+	ImagePath string
+	TagPath   string
+}
 
 // FluxHelmRelease echoes the generated type for the custom resource
 // definition. It's here so we can 1. get `baseObject` in there, and
@@ -45,6 +59,40 @@ func sorted_keys(values map[string]interface{}) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+// FindMappedContainerImages collects yaml dot notation mappings of
+// container images from the given annotations and attempts to resolve
+// them from the given values, it calls visit on every ref it was able
+// to resolve.
+func FindMappedContainerImages(annotations map[string]string,
+	values chartutil.Values,
+	visit func(string, image.Ref, ImageSetter) error) error {
+	mci := make(map[string]MappedContainerImage)
+	for k, v := range annotations {
+		if strings.HasPrefix(k, ImageRepositoryPrefix) {
+			container := strings.TrimPrefix(k, ImageRepositoryPrefix)
+			i, _ := mci[container]
+			i.ImagePath = v
+			mci[container] = i
+			continue
+		}
+		if strings.HasPrefix(k, ImageTagPrefix) {
+			container := strings.TrimPrefix(k, ImageTagPrefix)
+			i, _ := mci[container]
+			i.TagPath = v
+			mci[container] = i
+			continue
+		}
+	}
+	for k, i := range mci {
+		if image, setter, ok, err := interpretMappedContainerImage(values, i); ok {
+			visit(k, image, setter)
+		} else if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FindFluxHelmReleaseContainers examines the Values from a
@@ -177,18 +225,54 @@ func interpretAsImage(m mapper) (image.Ref, ImageSetter, bool) {
 	return image.Ref{}, nil, false
 }
 
+func interpretMappedContainerImage(values chartutil.Values, mci MappedContainerImage) (image.Ref, ImageSetter, bool, error) {
+	imageValue, err := values.PathValue(mci.ImagePath)
+	if err != nil {
+		return image.Ref{}, nil, false, err
+	}
+
+	if img, ok := imageValue.(string); ok {
+		imageRef, err := image.ParseRef(img)
+		if err == nil {
+			var taggy bool
+			tagValue, err := values.PathValue(mci.TagPath)
+			if err != nil {
+				return image.Ref{}, nil, false, err
+			}
+			if tag, ok := tagValue.(string); ok {
+				taggy = true
+				imageRef.Tag = tag
+			}
+			return imageRef, func(ref image.Ref) {
+				if taggy {
+					// implement setters
+					return
+				}
+				return
+			}, true, nil
+		}
+	}
+
+	return image.Ref{}, nil, false, nil
+}
+
 // Containers returns the containers that are defined in the
 // FluxHelmRelease.
 func (fhr FluxHelmRelease) Containers() []resource.Container {
 	var containers []resource.Container
-	// If there's an error in interpreting, return what we have.
-	_ = FindFluxHelmReleaseContainers(fhr.Spec.Values, func(container string, image image.Ref, _ ImageSetter) error {
+	containerSetter := func(container string, image image.Ref, _ ImageSetter) error {
 		containers = append(containers, resource.Container{
-			Name:  container,
+			Name: container,
 			Image: image,
 		})
 		return nil
-	})
+	}
+	// If there's an error in interpreting, return what we have.
+	err := FindMappedContainerImages(fhr.Meta.Annotations, fhr.Spec.Values, containerSetter)
+	if err != nil {
+		panic(err)
+	}
+	//_ = FindFluxHelmReleaseContainers(fhr.Spec.Values, containerSetter)
 	return containers
 }
 

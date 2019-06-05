@@ -347,6 +347,72 @@ spec:
 	}
 }
 
+func TestFindMappedContainerImages(t *testing.T) {
+
+	type container struct {
+		name, image, tag string
+	}
+
+	expected := []container{
+		{"top", "repo/imageOne", "tagOne"},
+		{"sub", "repo/imageTwo", "tagTwo"},
+	}
+
+	doc := `---
+apiVersion: helm.integrations.flux.weave.works/v1alpha2
+kind: FluxHelmRelease
+metadata:
+  name: test
+  namespace: test
+  annotations:
+    # Top level mapping
+    ` + ImageRepositoryPrefix + expected[0].name + `: customRepository
+    ` + ImageTagPrefix + expected[0].name + `: customTag
+    # Sub level mapping
+    ` + ImageRepositoryPrefix + expected[1].name + `: ` + expected[1].name + `.customRepository
+    ` + ImageTagPrefix + expected[1].name + `: ` + expected[1].name + `.customTag
+spec:
+  chartGitPath: test
+  values:
+    # Top level image
+    customRepository: ` + expected[0].image + `
+    customTag: ` + expected[0].tag + `
+
+    # Sub level image
+    ` + expected[1].name + `:
+      customRepository: ` + expected[1].image + `
+      customTag: `  + expected[1].tag + `
+`
+
+	resources, err := ParseMultidoc([]byte(doc), "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, ok := resources["test:fluxhelmrelease/test"]
+	if !ok {
+		t.Fatalf("expected resource not found; instead got %#v", resources)
+	}
+	fhr, ok := res.(resource.Workload)
+	if !ok {
+		t.Fatalf("expected resource to be a Workload, instead got %#v", res)
+	}
+
+	containers := fhr.Containers()
+	if len(containers) != len(expected) {
+		t.Fatalf("expected %d containers, got %d", len(expected), len(containers))
+	}
+	for i, c0 := range expected {
+		c1 := containers[i]
+		if c1.Name != c0.name {
+			t.Errorf("names do not match %q != %q", c0, c1)
+		}
+		c0image := fmt.Sprintf("%s:%s", c0.image, c0.tag)
+		if c1.Image.String() != c0image {
+			t.Errorf("images do not match %q != %q", c0image, c1.Image.String())
+		}
+	}
+}
+
 func TestParseAllFormatsInOne(t *testing.T) {
 
 	type container struct {
