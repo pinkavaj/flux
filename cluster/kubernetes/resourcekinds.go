@@ -405,7 +405,7 @@ func (fhr *fluxHelmReleaseKind) getWorkloads(c *Cluster, namespace string) ([]wo
 }
 
 func makeFluxHelmReleaseWorkload(fluxHelmRelease *fhr_v1alpha2.FluxHelmRelease) workload {
-	containers := createK8sFHRContainers(fluxHelmRelease.Spec.Values)
+	containers := createK8sFHRContainers(fluxHelmRelease.ObjectMeta.Annotations, fluxHelmRelease.Spec.Values)
 
 	podTemplate := apiv1.PodTemplateSpec{
 		ObjectMeta: fluxHelmRelease.ObjectMeta,
@@ -427,9 +427,9 @@ func makeFluxHelmReleaseWorkload(fluxHelmRelease *fhr_v1alpha2.FluxHelmRelease) 
 // createK8sContainers creates a list of k8s containers by
 // interpreting the FluxHelmRelease resource. The interpretation is
 // analogous to that in cluster/kubernetes/resource/fluxhelmrelease.go
-func createK8sFHRContainers(values map[string]interface{}) []apiv1.Container {
+func createK8sFHRContainers(annotations map[string]string, values map[string]interface{}) []apiv1.Container {
 	var containers []apiv1.Container
-	_ = kresource.FindFluxHelmReleaseContainers(values, func(name string, image image.Ref, _ kresource.ImageSetter) error {
+	kresource.FindFluxHelmReleaseContainers(annotations, values, func(name string, image image.Ref, _ kresource.ImageSetter) error {
 		containers = append(containers, apiv1.Container{
 			Name:  name,
 			Image: image.String(),
@@ -467,7 +467,7 @@ func (hr *helmReleaseKind) getWorkloads(c *Cluster, namespace string) ([]workloa
 }
 
 func makeHelmReleaseWorkload(helmRelease *fhr_v1beta1.HelmRelease) workload {
-	containers := createK8sFHRContainers(helmRelease.Spec.Values)
+	containers := createK8sFHRContainers(helmRelease.ObjectMeta.Annotations, helmRelease.Spec.Values)
 
 	podTemplate := apiv1.PodTemplateSpec{
 		ObjectMeta: helmRelease.ObjectMeta,

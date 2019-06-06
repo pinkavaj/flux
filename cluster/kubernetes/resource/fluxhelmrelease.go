@@ -2,7 +2,7 @@ package resource
 
 import (
 	"fmt"
-	"k8s.io/helm/pkg/chartutil"
+	"github.com/Jeffail/gabs"
 	"sort"
 	"strings"
 
@@ -26,9 +26,9 @@ const (
 	ImageTagPrefix        = "tag.flux.weave.works/"
 )
 
-// MappedContainerImage holds the yaml dot notation paths to a
+// ContainerImageMap holds the yaml dot notation paths to a
 // container image.
-type MappedContainerImage struct {
+type ContainerImageMap struct {
 	ImagePath string
 	TagPath   string
 }
@@ -46,74 +46,66 @@ type FluxHelmRelease struct {
 
 type ImageSetter func(image.Ref)
 
-// The type we have to interpret as containers is a
-// `map[string]interface{}`; and, we want a stable order to the
-// containers we output, since things will jump around in API calls,
-// or fail to verify, otherwise. Since we can't get them in the order
-// they appear in the document, sort them.
-func sorted_keys(values map[string]interface{}) []string {
-	var keys []string
-	for k := range values {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
+type imageAndSetter struct{
+	image  image.Ref
+	setter ImageSetter
 }
 
-// FindMappedContainerImages collects yaml dot notation mappings of
-// container images from the given annotations and attempts to resolve
-// them from the given values, it calls visit on every ref it was able
-// to resolve.
-func FindMappedContainerImages(annotations map[string]string,
-	values chartutil.Values,
-	visit func(string, image.Ref, ImageSetter) error) error {
-	mci := make(map[string]MappedContainerImage)
-	for k, v := range annotations {
-		if strings.HasPrefix(k, ImageRepositoryPrefix) {
-			container := strings.TrimPrefix(k, ImageRepositoryPrefix)
-			i, _ := mci[container]
-			i.ImagePath = v
-			mci[container] = i
-			continue
-		}
-		if strings.HasPrefix(k, ImageTagPrefix) {
-			container := strings.TrimPrefix(k, ImageTagPrefix)
-			i, _ := mci[container]
-			i.TagPath = v
-			mci[container] = i
-			continue
-		}
+// sorted_containers returns an array of container names in ascending
+// order, except for `ReleaseContainerName`, which always goes first.
+// We want a stable order to the containers we output, since things
+// will jump around in API calls, or fail to verify, otherwise.
+func sorted_containers(containers map[string]imageAndSetter) []string {
+	var keys[]string
+	for k := range containers {
+		keys = append(keys, k)
 	}
-	for k, i := range mci {
-		if image, setter, ok, err := interpretMappedContainerImage(values, i); ok {
-			visit(k, image, setter)
-		} else if err != nil {
-			return err
+	sort.Slice(keys, func(i, j int) bool {
+		if keys[i] == ReleaseContainerName {
+			return true
 		}
-	}
-	return nil
+		if keys[j] == ReleaseContainerName {
+			return false
+		}
+		return keys[i] < keys[j]
+	})
+	return keys
 }
 
 // FindFluxHelmReleaseContainers examines the Values from a
 // FluxHelmRelease (manifest, or cluster resource, or otherwise) and
 // calls visit with each container name and image it finds, as well as
-// procedure for changing the image value. It will return an error if
-// it cannot interpret the values as specifying images, or if the
-// `visit` function itself returns an error.
-func FindFluxHelmReleaseContainers(values map[string]interface{}, visit func(string, image.Ref, ImageSetter) error) error {
+// procedure for changing the image value.
+func FindFluxHelmReleaseContainers(annotations map[string]string, values map[string]interface{}, visit func(string, image.Ref, ImageSetter) error) {
+	containers := make(map[string]imageAndSetter)
+
 	// an image defined at the top-level is given a standard container name:
 	if image, setter, ok := interpretAsContainer(stringMap(values)); ok {
-		visit(ReleaseContainerName, image, setter)
+		containers[ReleaseContainerName] = imageAndSetter{image, setter}
 	}
 
 	// an image as part of a field is treated as a "container" spec
 	// named for the field:
-	for _, k := range sorted_keys(values) {
-		if image, setter, ok := interpret(values[k]); ok {
-			visit(k, image, setter)
+	for k, v := range values {
+		if image, setter, ok := interpret(v); ok {
+			containers[k] = imageAndSetter{image, setter}
 		}
 	}
-	return nil
+
+	// user mapped images, it will overwrite automagically interpreted
+	// images with user defined ones:
+	for k, v := range containerImageMappingsFromAnnotations(annotations) {
+		if image, setter, ok := interpretMappedContainerImage(values, v); ok {
+			containers[k] = imageAndSetter{image, setter}
+		}
+	}
+
+	// sort the found containers by name, using the custom logic
+	// defined in sorted_containers, so the calls to visit are
+	// predictable:
+	for _, k := range sorted_containers(containers) {
+		visit(k, containers[k].image, containers[k].setter)
+	}
 }
 
 // The following is some machinery for interpreting a
@@ -224,41 +216,64 @@ func interpretAsImage(m mapper) (image.Ref, ImageSetter, bool) {
 	return image.Ref{}, nil, false
 }
 
-func interpretMappedContainerImage(values chartutil.Values, mci MappedContainerImage) (image.Ref, ImageSetter, bool, error) {
-	imageValue, err := values.PathValue(mci.ImagePath)
+// containerImageMappingsFromAnnotations collects yaml dot notation
+// mappings of container images from the given annotations.
+func containerImageMappingsFromAnnotations(annotations map[string]string) map[string]ContainerImageMap {
+	cim := make(map[string]ContainerImageMap)
+	for k, v := range annotations {
+		if strings.HasPrefix(k, ImageRepositoryPrefix) {
+			container := strings.TrimPrefix(k, ImageRepositoryPrefix)
+			i, _ := cim[container]
+			i.ImagePath = v
+			cim[container] = i
+			continue
+		}
+		if strings.HasPrefix(k, ImageTagPrefix) {
+			container := strings.TrimPrefix(k, ImageTagPrefix)
+			i, _ := cim[container]
+			i.TagPath = v
+			cim[container] = i
+			continue
+		}
+	}
+	return cim
+}
+
+func interpretMappedContainerImage(values map[string]interface{}, cim ContainerImageMap) (image.Ref, ImageSetter, bool) {
+	v, err := gabs.Consume(values)
 	if err != nil {
-		return image.Ref{}, nil, false, err
+		return image.Ref{}, nil, false
 	}
 
+	imageValue := v.Path(cim.ImagePath).Data()
 	if img, ok := imageValue.(string); ok {
-		imageRef, err := image.ParseRef(img)
-		if err == nil {
-			var taggy bool
-			tagValue, err := values.PathValue(mci.TagPath)
-			if err != nil {
-				return image.Ref{}, nil, false, err
+		if cim.TagPath == "" {
+			if imgRef, err := image.ParseRef(img); err == nil {
+				return imgRef, func(ref image.Ref) {
+					v.SetP(ref.String(), cim.ImagePath)
+				}, true
 			}
-			if tag, ok := tagValue.(string); ok {
-				taggy = true
-				imageRef.Tag = tag
+		}
+
+		tagValue := v.Path(cim.TagPath).Data()
+		if tag, ok := tagValue.(string); ok {
+			if imgRef, err := image.ParseRef(img + ":" + tag); err == nil {
+				return imgRef, func(ref image.Ref) {
+					v.SetP(ref.Name.String(), cim.ImagePath)
+					v.SetP(ref.Tag, cim.TagPath)
+				}, true
 			}
-			return imageRef, func(ref image.Ref) {
-				if taggy {
-					// implement setters
-					return
-				}
-				return
-			}, true, nil
 		}
 	}
 
-	return image.Ref{}, nil, false, nil
+	return image.Ref{}, nil, false
 }
 
 // Containers returns the containers that are defined in the
 // FluxHelmRelease.
 func (fhr FluxHelmRelease) Containers() []resource.Container {
 	var containers []resource.Container
+
 	containerSetter := func(container string, image image.Ref, _ ImageSetter) error {
 		containers = append(containers, resource.Container{
 			Name:  container,
@@ -266,12 +281,9 @@ func (fhr FluxHelmRelease) Containers() []resource.Container {
 		})
 		return nil
 	}
-	// If there's an error in interpreting, return what we have.
-	err := FindMappedContainerImages(fhr.Meta.Annotations, fhr.Spec.Values, containerSetter)
-	if err != nil {
-		panic(err)
-	}
-	//_ = FindFluxHelmReleaseContainers(fhr.Spec.Values, containerSetter)
+
+	FindFluxHelmReleaseContainers(fhr.Meta.Annotations, fhr.Spec.Values, containerSetter)
+
 	return containers
 }
 
@@ -281,15 +293,16 @@ func (fhr FluxHelmRelease) Containers() []resource.Container {
 // get away with a value-typed receiver because we set a map entry.
 func (fhr FluxHelmRelease) SetContainerImage(container string, ref image.Ref) error {
 	found := false
-	if err := FindFluxHelmReleaseContainers(fhr.Spec.Values, func(name string, image image.Ref, setter ImageSetter) error {
+	imageSetter := func(name string, image image.Ref, setter ImageSetter) error {
 		if container == name {
 			setter(ref)
 			found = true
 		}
 		return nil
-	}); err != nil {
-		return err
 	}
+
+	FindFluxHelmReleaseContainers(fhr.Meta.Annotations, fhr.Spec.Values, imageSetter)
+
 	if !found {
 		return fmt.Errorf("did not find container %s in FluxHelmRelease", container)
 	}

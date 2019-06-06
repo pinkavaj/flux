@@ -5,6 +5,7 @@ go 1.12
 require (
 	cloud.google.com/go v0.37.4 // indirect
 	github.com/2opremio/go-k8s-portforward v1.0.3-0.20190523130731-8523ced1251f
+	github.com/Jeffail/gabs v1.4.0
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.4.2
 	github.com/Masterminds/sprig v0.0.0-20190301161902-9f8fceff796f // indirect
