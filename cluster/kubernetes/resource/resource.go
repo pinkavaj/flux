@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	PolicyPrefix = "flux.weave.works/"
-	ClusterScope = "<cluster>"
+	PolicyPrefix       = "flux.weave.works/"
+	FilterPolicyPrefix = "filter.flux.weave.works/"
+	ClusterScope       = "<cluster>"
 )
 
 // KubeManifest represents a manifest for a Kubernetes resource. For
@@ -96,6 +97,10 @@ func PoliciesFromAnnotations(annotations map[string]string) policy.Set {
 			} else {
 				set = set.Set(policy.Policy(p), v)
 			}
+		}
+		if strings.HasPrefix(k, FilterPolicyPrefix) {
+			container := strings.TrimPrefix(k, FilterPolicyPrefix)
+			set = set.Set(policy.TagPrefix(container), v)
 		}
 	}
 	return set
