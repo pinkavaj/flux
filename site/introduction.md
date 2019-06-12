@@ -1,7 +1,4 @@
----
-title: Introducing Weave Flux
-menu_order: 10
----
+# Introducing Weave Flux
 
 Continuous delivery is a term that encapsulates a set of best practices 
 that surround building, deploying and monitoring applications. The 

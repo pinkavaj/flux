@@ -1,7 +1,4 @@
----
-title: Weave Flux FAQ
-menu_order: 60
----
+# Weave Flux FAQ
 
 - [General questions](#general-questions)
   * [What does Flux do?](#what-does-flux-do)
@@ -461,5 +458,4 @@ at `k8s/common` set the Git path as `--set git.path="k8s/common\,k8s/cluster-nam
 For each cluster create a Git branch in your config repo.
 When installing Flux Helm chart set the Git branch using `--set git.branch=cluster-name`
 and set a unique label for each cluster `--set git.label=cluster-name`.
-
 
