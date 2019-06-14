@@ -57,7 +57,7 @@ from the settings in Weave Cloud; set the environment variable
 `FLUX_TOKEN` to the token.
 
 If you have set Flux up standalone (as in the instructions in
-[./get-started.md](./get-started.md)), this
+[./tutorials/get-started.md](./tutorials/get-started.md)), this
 probably means Flux is defaulting to using Weave Cloud because you've
 not set the environment variable `FLUX_URL` to point at the
 daemon. See [./standalone-setup.md](./standalone-setup.md).

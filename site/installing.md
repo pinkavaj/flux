@@ -8,10 +8,10 @@ should run in the cluster. Flux imposes
 ## Installing Weave Flux
 
 Here are the instructions to [install Flux on your own
-cluster](./get-started.md).
+cluster](./tutorials/get-started.md).
 
 If you are using Helm, we have a [separate section about
-this](./helm-get-started.md).
+this](./tutorials/helm-get-started.md).
 
 ## Next
 
