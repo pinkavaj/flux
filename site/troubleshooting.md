@@ -47,7 +47,7 @@ This means Flux can't read from and write to the git repo. Check that
    `~/.ssh/known_hosts` in the fluxd container. We prime the container
    _image_ with host keys for `github.com`, `gitlab.com`, `bitbucket.org`, `dev.azure.com`, and `vs-ssh.visualstudio.com`, but if you're using your own git server, you'll
    need to add its host key. See
-   [./standalone-setup.md](./standalone-setup.md#using-a-private-git-host).
+   [./standalone-setup.md](./install/standalone-setup.md#using-a-private-git-host).
 
 ### "The request failed authentication"
 
@@ -57,10 +57,10 @@ from the settings in Weave Cloud; set the environment variable
 `FLUX_TOKEN` to the token.
 
 If you have set Flux up standalone (as in the instructions in
-[./tutorials/get-started.md](./tutorials/get-started.md)), this
+[./tutorials/get-started.md](./install/get-started.md)), this
 probably means Flux is defaulting to using Weave Cloud because you've
 not set the environment variable `FLUX_URL` to point at the
-daemon. See [./standalone-setup.md](./standalone-setup.md).
+daemon. See [./standalone-setup.md](./install/standalone-setup.md).
 
 ### I'm using GCR/GKE and I keep seeing "Quota exceeded" in logs
 
@@ -93,7 +93,7 @@ happen:
    present, it looks at `imagePullSecret`s attached to workloads,
    service accounts, platform-provided credentials on GCP, AWS or Azure, and
    a Docker config file if you mount one into the fluxd container (see
-   the [command-line usage](./daemon.md)).
+   the [command-line usage](./internals/daemon.md)).
  - When using images in ECR, from EC2, the `NodeInstanceRole` for the
    worker node running fluxd must have permissions to query the ECR
    registry (or registries) in
