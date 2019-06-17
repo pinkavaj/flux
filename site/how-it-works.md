@@ -91,4 +91,4 @@ purposes. You can see every event that has happened on the cluster.
 
 ## Next
 
-_Get started by [installing Flux](/site/installing.md)._
+_Get started by [installing Flux](./installing.md)._
