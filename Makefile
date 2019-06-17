@@ -32,6 +32,8 @@ IMAGE_TAG:=$(shell ./docker/image-tag)
 VCS_REF:=$(shell git rev-parse HEAD)
 BUILD_DATE:=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 
+DOCS_PORT:=8000
+
 all: $(GOBIN)/fluxctl $(GOBIN)/fluxd $(GOBIN)/helm-operator build/.flux.done build/.helm-operator.done
 
 release-bins:
@@ -131,3 +133,7 @@ check-generated:
 	./bin/helm/update_codegen.sh
 	git diff --exit-code -- integrations/apis intergrations/client
 
+run-docs:
+	@cd site && docker build -t flux-docs .
+	@echo Stating docs website on http://localhost:${DOCS_PORT}/_build/html/index.html
+	@docker run -i -p ${DOCS_PORT}:8000 -e USER_ID=$$UID flux-docs
