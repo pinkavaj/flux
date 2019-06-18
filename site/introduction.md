@@ -62,5 +62,5 @@ and other such media.
 
 _Find out more about [Flux's features](./how-it-works.md)._
 
-_Get started immediately by [installing Flux](../install/installing.md)._
+_Get started immediately by [installing Flux](../install/index.md)._
 
