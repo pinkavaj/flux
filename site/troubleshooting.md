@@ -93,7 +93,7 @@ happen:
    present, it looks at `imagePullSecret`s attached to workloads,
    service accounts, platform-provided credentials on GCP, AWS or Azure, and
    a Docker config file if you mount one into the fluxd container (see
-   the [command-line usage](./internals/daemon.md)).
+   the [command-line usage](./features/daemon.md)).
  - When using images in ECR, from EC2, the `NodeInstanceRole` for the
    worker node running fluxd must have permissions to query the ECR
    registry (or registries) in
