@@ -35,6 +35,8 @@ Version controlling of cluster manifests provides reproducibility and a historic
 Setting up and configuring fluxd is discussed in our [standalone setup](../install/standalone-setup.md)
 document.
 
+There is also more information on [garbage collection](./garbagecollection.md) and [Git commit signing](../using/git-gpg.md).
+
 ## Flags
 
 fluxd requires setup and offers customization though a multitude of flags.
@@ -55,7 +57,7 @@ fluxd requires setup and offers customization though a multitude of flags.
 | --git-email                                      | `support@weave.works`    | email to use as git committer
 | --git-set-author                                 | false                    | if set, the author of git commits will reflect the user who initiated the commit and will differ from the git committer
 | --git-gpg-key-import                             |                          | if set, fluxd will attempt to import the gpg key(s) found on the given path
-| --git-signing-key                                |                          | if set, commits made by fluxd to the user git repo will be signed with the provided GPG key. See [Git commit signing](../using/git-gpg.md) to learn how to use this feature
+| --git-signing-key                                |                          | if set, commits made by fluxd to the user git repo will be signed with the provided GPG key.
 | --git-label                                      |                          | label to keep track of sync progress; overrides both --git-sync-tag and --git-notes-ref
 | --git-sync-tag                                   | `flux-sync`              | tag to use to mark sync progress for this cluster (old config, still used if --git-label is not supplied)
 | --git-notes-ref                                  | `flux`                   | ref to use for keeping commit annotations in git notes
@@ -63,7 +65,7 @@ fluxd requires setup and offers customization though a multitude of flags.
 | --git-timeout                                    | `20s`                    | duration after which git operations time out
 | **syncing:** control over how config is applied to the cluster
 | --sync-interval                                  | `5m`                     | apply the git config to the cluster at least this often. New commits may provoke more frequent syncs
-| --sync-garbage-collection                        | `false`                  | experimental: when set, fluxd will delete resources that it created, but are no longer present in git (see [garbage collection](./garbagecollection.md))
+| --sync-garbage-collection                        | `false`                  | experimental: when set, fluxd will delete resources that it created, but are no longer present in git
 | **registry cache:** (none of these need overriding, usually)
 | --memcached-hostname                             | `memcached`              | hostname for memcached service to use for caching image metadata
 | --memcached-timeout                              | `1s`                     | maximum time to wait before giving up on memcached requests
