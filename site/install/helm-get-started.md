@@ -1,4 +1,4 @@
-# Installing Weave Flux using Helm
+# Installing Flux using Helm
 ## Get started with Flux using Helm
 
 If you are using Helm already, this guide is for you. By the end
@@ -48,7 +48,7 @@ helm init --skip-refresh --upgrade --service-account tiller --history-max 10
 > and be aware of the `--history-max` flag before promoting to
 > production.
 
-### Install Weave Flux
+### Install Flux
 
 Add the Flux repository of Weaveworks:
 
@@ -62,12 +62,12 @@ Apply the Helm Release CRD:
 kubectl apply -f https://raw.githubusercontent.com/weaveworks/flux/master/deploy-helm/flux-helm-release-crd.yaml
 ```
 
-In this next step you install Weave Flux using `helm`. Simply
+In this next step you install Flux using `helm`. Simply
 
  1. Fork [flux-get-started](https://github.com/weaveworks/flux-get-started)
     on GitHub and replace the `weaveworks` with your GitHub username in
     [here](https://github.com/weaveworks/flux-get-started/blob/master/releases/ghost.yaml#L13)
- 1. Install Weave Flux and its Helm Operator by specifying your fork URL:
+ 1. Install Flux and its Helm Operator by specifying your fork URL:
 
       *Just make sure you replace `YOURUSER` with your GitHub username
       in the command below:*

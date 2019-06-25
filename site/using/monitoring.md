@@ -1,4 +1,4 @@
-# Monitoring Weave Flux
+# Monitoring Flux
 
 The Flux daemon exposes `/metrics` endpoints which can be scraped for
 monitoring data in Prometheus format; exact metric names and help are

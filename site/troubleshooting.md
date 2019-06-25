@@ -1,4 +1,4 @@
-# Troubleshooting Weave Flux
+# Troubleshooting Flux
 
 Also see the [issues labeled with
 `FAQ`](https://github.com/weaveworks/flux/labels/FAQ), which often
@@ -48,19 +48,6 @@ This means Flux can't read from and write to the git repo. Check that
    _image_ with host keys for `github.com`, `gitlab.com`, `bitbucket.org`, `dev.azure.com`, and `vs-ssh.visualstudio.com`, but if you're using your own git server, you'll
    need to add its host key. See [./standalone-setup.md](./install/standalone-setup.md).
 
-### "The request failed authentication"
-
-If you're using [Weave Cloud](https://cloud.weave.works/), this
-probably means you haven't supplied the token. You can get the token
-from the settings in Weave Cloud; set the environment variable
-`FLUX_TOKEN` to the token.
-
-If you have set Flux up standalone (as in the instructions in
-[./tutorials/get-started.md](./install/get-started.md)), this
-probably means Flux is defaulting to using Weave Cloud because you've
-not set the environment variable `FLUX_URL` to point at the
-daemon. See [./standalone-setup.md](./install/standalone-setup.md).
-
 ### I'm using GCR/GKE and I keep seeing "Quota exceeded" in logs
 
 GCP (in general) has quite conservative API rate limiting, and Flux's
@@ -82,9 +69,8 @@ problem.
 ### Why are my images not showing up in the list of images?
 
 Sometimes, instead of seeing the various images and their tags, the
-output of `fluxctl list-images` (or the UI in Weave Cloud, if you're
-using that) shows nothing. There's a number of reasons this can
-happen:
+output of `fluxctl list-images` shows nothing. There's a number of
+reasons this can happen:
 
  - Flux just hasn't fetched the image metadata yet. This may be the case
    if you've only just started using a particular image in a workload.

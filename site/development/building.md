@@ -1,4 +1,4 @@
-# Building Weave Flux
+# Building Flux
 
 You'll need a working `go` environment version >= 1.11 (official releases are built against `1.12`).
 It's also expected that you have a Docker daemon for building images.

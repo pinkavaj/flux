@@ -1,4 +1,4 @@
-# Weave Flux FAQ
+# Flux FAQ
 
 ## General questions
 
