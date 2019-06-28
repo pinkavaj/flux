@@ -9,7 +9,7 @@ logFormat: fmt
 
 image:
   repository: docker.io/weaveworks/flux
-  tag: 1.13.0
+  tag: 1.13.1
   pullPolicy: IfNotPresent
   pullSecret:
 
@@ -20,7 +20,7 @@ service:
 helmOperator:
   replicaCount: 1
   create: false
-  createCRD: true
+  createCRD: false
   repository: docker.io/weaveworks/helm-operator
   tag: 0.9.2
   pullPolicy: IfNotPresent
@@ -88,6 +88,11 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name:
+
+# If `false`, Flux and the Helm Operator will be restricted to the namespace where they are deployed
+# and the kubeconfig default context will be set to that namespace
+clusterRole:
+  create: true
 
 resources:
   requests:

@@ -1,6 +1,7 @@
 package v1beta1
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -8,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/helm/pkg/chartutil"
 
-	"github.com/weaveworks/flux"
+	"github.com/weaveworks/flux/resource"
 )
 
 // +genclient
@@ -26,8 +27,23 @@ type HelmRelease struct {
 // ResourceID returns an ID made from the identifying parts of the
 // resource, as a convenience for Flux, which uses them
 // everywhere.
-func (fhr HelmRelease) ResourceID() flux.ResourceID {
-	return flux.MakeResourceID(fhr.Namespace, "HelmRelease", fhr.Name)
+func (fhr HelmRelease) ResourceID() resource.ID {
+	return resource.MakeID(fhr.Namespace, "HelmRelease", fhr.Name)
+}
+
+// ReleaseName returns the configured release name, or constructs and
+// returns one based on the namespace and name of the HelmRelease.
+func (fhr HelmRelease) ReleaseName() string {
+	namespace := fhr.Namespace
+	if namespace == "" {
+		namespace = "default"
+	}
+	releaseName := fhr.Spec.ReleaseName
+	if releaseName == "" {
+		releaseName = fmt.Sprintf("%s-%s", namespace, fhr.Name)
+	}
+
+	return releaseName
 }
 
 // ValuesFromSource represents a source of values.
