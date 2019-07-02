@@ -1,4 +1,5 @@
 # Installing Flux using Helm
+
 ## Get started with Flux using Helm
 
 If you are using Helm already, this guide is for you. By the end
@@ -184,12 +185,7 @@ As you can see, the actual steps to set up Flux, get our app
 deployed, give Flux access to it and see modifications land are
 very straight-forward and are a quite natural workflow.
 
-## Next
-
-As a next step, you might want to dive deeper into [how to control
-Flux](../using/fluxctl.md) or go through our hands-on tutorial about
-driving Flux, e.g. [automations, annotations and
-locks](../using/annotations-tutorial.md).
+## A more advanced setup
 
 For a more advanced Helm setup, take a look at the [gitops-helm
 repository](https://github.com/stefanprodan/gitops-helm).

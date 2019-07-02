@@ -75,7 +75,3 @@ configuration of the cluster to deploy the new images.
 
 Images can be "locked" to a specific version. "locked" images won't be
 updated by automated or manual means.
-
-## Next
-
-_Get started by [installing Flux](./install/index.md)._
