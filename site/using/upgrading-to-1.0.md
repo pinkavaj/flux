@@ -97,7 +97,7 @@ to expose the Flux service.
 
 Before making any changes, get the config so that it can be consulted later:
 
-```
+```sh
 ./fluxctl_030 get-config --fingerprint=md5 | tee old-config.yaml
 ```
 
@@ -191,6 +191,6 @@ before running Flux v1.
 
 ### Something else went wrong
 
-You can reach Weaveworks developers in our community Slack --
-https://weaveworks.github.io/community-slack/ -- where we will be able
-to help.
+You can reach Weaveworks developers in [our community
+Slack](https://weaveworks.github.io/community-slack/) -- where we
+will be able to help.
