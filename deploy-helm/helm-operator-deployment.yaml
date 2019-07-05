@@ -62,7 +62,7 @@ spec:
         # There are no ":latest" images for helm-operator. Find the most recent
         # release or image version at https://hub.docker.com/r/weaveworks/helm-operator/tags
         # and replace the tag here.
-        image: docker.io/weaveworks/helm-operator:0.9.2
+        image: docker.io/fluxcd/helm-operator:0.9.2
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
@@ -71,7 +71,7 @@ spec:
           requests:
             cpu: 50m
             memory: 64Mi
-        volumeMounts:
+        volumeMounts: []
         # Include this if you need to mount a customised known_hosts or ssh_config
         # file; you'll also need the volume declared above.
         # - name: sshdir
